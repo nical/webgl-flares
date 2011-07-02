@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+	<style>
+		body
+		{
+			margin: 0px;
+			padding: 0px;
+			overflow: hidden;
+		}
+	</style>
+	
+
+	<script id="background-fs" type="x-shader/x-fragment">
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+		
+		uniform float screenRatio;
+		uniform float blink;
+		uniform float blink2;
+		uniform float magic;
+		
+		varying vec2 screenPos;
+		uniform vec2  mBallPos[5];
+		uniform float mBallWeights[5];		
+		
+		void main() {
+      float distSum = 0.0;
+      for(int i = 0; i < 5; ++i){
+			distSum += 1.0 / distance(mBallPos[i], screenPos)*mBallWeights[i];
+		}
+		
+		distSum *= 1.5;
+		vec3 color = vec3(1.0, 0.5, 3.0);
+		float sinDistSum = sin(distSum);
+		if(distSum>40.0){
+			color = vec3(screenPos * 0.5 + vec2(0.5, 0.5), 0.0);
+		}else if (abs(distSum - (6.28 * blink2 + 1.57)) < 0.4) {
+			color = vec3(1.0, 1.0, 1.0);
+		}else if(distSum>30.0){
+			color = vec3(0.0, 0.0, 0.0);
+		}else if (sinDistSum > 0.8){
+			if (abs(distSum - (6.28 * blink + 1.57)) < 0.3) {
+				color = vec3(screenPos * 0.5 + vec2(0.5, 0.5), 0.0);
+			}else{
+        color = vec3(0.0, 0.0, 50.0 - distSum) * 0.002;
+        }
+			}else{
+				color = clamp(vec3(0.32, 0.45, 0.58)  + vec3(screenPos.yyy)*0.4 - 0.1, 0.0,1.0);
+				
+				if( mod(gl_FragCoord.y * 0.5, 3.0) < 0.5)
+					color *= 0.86;
+      }
+			float dist2center = 1.0 - pow(dot(screenPos,screenPos),0.8)*0.5;
+			color *= clamp(dist2center, 0.0, 1.0);
+			float lum = color.r * 0.3 + color.g * 0.6 + color.b * 0.1;
+			color = mix(vec3(lum, lum, lum), color, magic);
+			gl_FragColor = vec4(color, 1.0);
+		}
+	</script>
+
+	<script id="background-vs" type="x-shader/x-vertex">
+		attribute vec2 pos;
+		
+		uniform float time;
+		
+		varying vec2  screenPos;
+		
+		
+		void main(void) {
+			gl_Position = vec4(pos, 0.0, 1.0);
+			screenPos = pos;
+			
+			/*mBall1pos = vec2(0.0, 0.0); mBall1weight = 1.4;
+			mBall2pos = vec2(0.5, 0.0);  mBall2weight = 1.2;
+			mBall3pos = vec2(0.2, 0.7); mBall3weight = 1.3;*/
+		}
+	</script>
+
+	
+	<script id="fs" type="x-shader/x-fragment">
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		varying vec3 vertColor;
+		
+		void main() {
+			//gl_FragColor = vec4(0.2,0.3,0.9,0.5);
+			vec2 dvec = (gl_PointCoord - vec2(0.5, 0.5)) * 2.0;
+			float dist = 1.0 - dot(dvec, dvec);
+			gl_FragColor = vec4(gl_FragCoord.xy * 0.0004 * dist, dist, dist);
+			//gl_FragColor = vec4(vertColor * dist, 1.0);
+		}
+	</script>
+
+	<script id="vs" type="x-shader/x-vertex">
+		attribute vec3 pos1;
+		attribute vec3 pos2;
+		//attribute vec3 color;
+		
+		uniform mat4 mvpMatrix;
+		uniform float time;
+		uniform float fft[32];
+		
+		//varying vec3 vertColor;
+		
+		void main(void) {
+			vec3 pos = pos1 * (1.0 - time) + pos2 * time;
+			pos.z += fft[int((pos.x + 10.0) * 32.0 / 30.0)] * 3.0;
+			gl_Position = mvpMatrix * vec4(pos, 1.0);
+			gl_PointSize = 15.0;
+			//vertColor = color;
+		}
+	</script>
+	
+	<script id="explode-fs" type="x-shader/x-fragment">
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		void main() {
+			//gl_FragColor = vec4(0.2,0.3,0.9,0.5);
+			vec2 dvec = (gl_PointCoord - vec2(0.5, 0.5)) * 2.0;
+			float dist = 1.0 - dot(dvec, dvec);
+			gl_FragColor = vec4(gl_FragCoord.xy * 0.0004 * dist, dist, dist);
+		}
+	</script>
+
+	<script id="explode-vs" type="x-shader/x-vertex">
+		attribute vec3 pos1;
+		attribute vec3 pos2;
+		
+		uniform mat4 mvpMatrix;
+		uniform float time;
+
+		void main(void) {
+			float time2 = smoothstep(0.0, 1.0, time);
+			vec3 pos = pos1 * (1.0 - time2) + pos2 * time2;
+			float x = (time * 2.0 - 1.0) * 1.7;
+			float magicCoeff = 1.0 - x * x + 0.4 * pow(abs(x), 3.0) - 0.1;
+			magicCoeff = clamp(magicCoeff, 0.0, 1.0);
+			pos = pos + vec3(sin(pos.y * 17.0), sin(pos.z * 23.0), sin(pos.x * 21.0)) * magicCoeff * 0.1;
+			pos = pos * (magicCoeff * 5.0 + 1.0);
+			gl_Position = mvpMatrix * vec4(pos, 1.0);
+			gl_PointSize = 15.0;
+		}
+	</script>
+	
+	<script id="gravity-fs" type="x-shader/x-fragment">
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+
+		uniform float time;
+		
+		void main() {
+			//gl_FragColor = vec4(0.2,0.3,0.9,0.5);
+			vec2 dvec = (gl_PointCoord - vec2(0.5, 0.5)) * 2.0;
+			float dist = (1.0 - dot(dvec, dvec)) * (1.0 - time);
+			gl_FragColor = vec4(gl_FragCoord.xy * 0.0004 * dist, dist, dist);
+		}
+	</script>
+
+	<script id="gravity-vs" type="x-shader/x-vertex">
+		attribute vec3 pos1;
+		attribute vec3 pos2;
+		
+		uniform mat4 mvpMatrix;
+		uniform float time;
+
+		void main(void) {
+			float totalGravity = 10.0 * time * time + 3.0 * time;
+			vec3 pos = pos1 - totalGravity * vec3(0.0, 0.0, pow(sin(pos1.x * 50.0) + sin(pos1.y * 40.0), 2.5));
+			gl_Position = mvpMatrix * vec4(pos, 1.0);
+			gl_PointSize = 15.0;
+		}
+	</script>
+	
+	<script id="postprocess-fs" type="x-shader/x-fragment">
+		#ifdef GL_ES
+		precision highp float;
+		#endif
+		
+		uniform float screenRatio;
+		uniform sampler2D sceneTexture;
+		
+		varying vec2 screenPos;
+		
+		void main() {
+			//gl_FragColor = texture2D(sceneTexture, screenPos);
+			gl_FragColor = vec4(screenPos, 0.0, 1.0);
+		}
+	</script>
+	
+	<script id="postprocess-vs" type="x-shader/x-vertex">
+		attribute vec2 pos;
+		
+		uniform float time;
+		varying vec2 screenPos;
+		
+		void main(void) {
+			gl_Position = vec4(pos, 0.0, 1.0);
+			screenPos = pos;
+		}
+	</script>
+	
+    <script id="background-vs" type='x-shader/x-vertex' src='data/shaders/background.vs'></script>
+    <script id="background-fs" type='x-shader/x-fragment' src='data/shaders/background.fs'></script>
+	
+	<script type='application/javascript'>
+		var meshArrays = {}
+		var meshes = {}
+	</script>
+	
+    <script type='application/javascript' src='lib/glMatrix.js'></script>
+    <script type='application/javascript' src='lib/beatdetektor.js'></script>
+    <script type='application/javascript' src='lib/fft.js'></script>
+	
+    <script type='application/javascript' src='main.js'></script>
+    <script type='application/javascript' src='Background.js'></script>
+    <script type='application/javascript' src='MeshBuffer.js'></script>
+    <script type='application/javascript' src='PostProcess.js'></script>
+    <script type='application/javascript' src='Sequence.js'></script>
+    <script type='application/javascript' src='ShaderProgram.js'></script>
+    <script type='application/javascript' src='data/meshes/credits.js'></script>
+    <script type='application/javascript' src='data/meshes/demojs.js'></script>
+    <script type='application/javascript' src='data/meshes/funmonkey.js'></script>
+    <script type='application/javascript' src='data/meshes/sadmonkey.js'></script>
+    <script type='application/javascript' src='data/meshes/wtfmonkey.js'></script>
+    <script type='application/javascript' src='data/meshes/angrymonkey.js'></script>
+    <script type='application/javascript' src='data/meshes/quad.js'></script>
+    <script type='application/javascript' src='data/meshes/monkey.js'></script>
+    <script type='application/javascript' src='data/meshes/plane.js'></script>
+    <script type='application/javascript' src='data/meshes/test.js'></script>
+    <script type='application/javascript' src='data/meshes/test2.js'></script>
+    <script type='application/javascript' src='data/meshes/test3.js'></script>
+  </head>
+  <body onload="initDemo()">
+    <canvas id="renderCanvas" style="border: none;" width="500" height="500"></canvas>
+	<audio id="music" src="data/sound/audio.ogg" />
+	<script type="application/javascript">document.getElementById("music").addEventListener("loadedmetadata", onLoadedMetadata, false);</script>
+  </body>
+</html>
