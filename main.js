@@ -1,7 +1,7 @@
 var thisBrowser = navigator.userAgent.toLowerCase();
 var onFirefox = (thisBrowser.indexOf("firefox") != -1);
 
-alert(onFirefox)
+//alert(onFirefox)
 
 var seq;
 var back;
