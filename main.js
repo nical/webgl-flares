@@ -6,9 +6,9 @@ var onFirefox = (thisBrowser.indexOf("firefox") != -1);
 var seq;
 var back;
 var post;
-/*var sceneBuffer;
+var sceneBuffer;
 var sceneTexture;
-var sceneDepth;*/
+var sceneDepth;
 
 var globalTime = 0
 var time = new Date().getTime();
@@ -44,7 +44,7 @@ function initDemo() {
 	}
 
 	// offscreen render target
-	/*sceneBuffer = gl.createFramebuffer()
+	sceneBuffer = gl.createFramebuffer()
 	gl.bindFramebuffer(gl.FRAMEBUFFER, sceneBuffer)
 	sceneBuffer.width = gl.viewportWidth
 	sceneBuffer.height = gl.viewportHeight
@@ -55,15 +55,17 @@ function initDemo() {
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, sceneBuffer.width, sceneBuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHEMENT0, gl.TEXTURE_2D, sceneTexture, 0)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, sceneBuffer.width, sceneBuffer.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, sceneTexture, 0)
 	gl.bindTexture(gl.TEXTURE_2D, null)
 
 	sceneDepth = gl.createRenderbuffer()
 	gl.bindRenderbuffer(gl.RENDERBUFFER, sceneDepth)
 	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, sceneDepth, sceneBuffer.width, sceneBuffer.height)
 	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHEMENT, gl.RENDERBUFFER, sceneDepth)
-	gl.bindRenderbuffer(gl.RENDERBUFFER, null)*/
+	gl.bindRenderbuffer(gl.RENDERBUFFER, null)
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
 	// main particle sequence
 	var sequenceData = [
@@ -334,9 +336,8 @@ function render()
 	post.update(dt)
 
 	// offscreen pass
-	/*gl.bindTexture(gl.TEXTURE_2D, null)
+	gl.bindTexture(gl.TEXTURE_2D, null)
 	gl.bindFramebuffer(gl.FRAMEBUFFER, sceneBuffer)
-	alert(gl.checkFramebufferStatus(gl.FRAMEBUFFER))*/
 
 	gl.clearColor(0.0, 0.0, 0.0, 1.0)
 	gl.clear(gl.COLOR_BUFFER_BIT)
@@ -389,12 +390,12 @@ function render()
 		//alert("Thanks for watching!");
   }
 	// post processing
-	/*gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 	gl.activeTexture(gl.TEXTURE0)
 	gl.bindTexture(gl.TEXTURE_2D, sceneTexture)
 
 	gl.disable(gl.BLEND)
-	post.draw(gl.viewportWidth / gl.viewporteight)*/
+	post.draw(gl.viewportWidth / gl.viewporteight)
 
 	requestAnimFrame(render)
 }
