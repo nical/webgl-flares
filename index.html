@@ -238,9 +238,13 @@
     <script type='application/javascript' src='data/meshes/test2.js'></script>
     <script type='application/javascript' src='data/meshes/test3.js'></script>
   </head>
-  <body onload="initDemo()">
+  <body>
+    <div id="progress">
+      <h1>Hardcore buffering action</h1>
+      <progress></progress>
+  </div>
     <canvas id="renderCanvas" style="border: none;" width="500" height="500"></canvas>
-	<audio id="music" src="data/sound/audio.ogg" />
+    <audio id="music" src="data/sound/audio.ogg" preload=auto oncanplaythrough="initDemo()"> </audio>
 	<script type="application/javascript">document.getElementById("music").addEventListener("loadedmetadata", onLoadedMetadata, false);</script>
   </body>
 </html>

@@ -32,8 +32,7 @@ var frameBufferLength = 0;
 var fft = null;
 
 function initDemo() {
-	var audioElement = document.getElementById("music")
-	audioElement.play()
+	var audioElement = document.getElementById("music");
 
 	initContext();
 
@@ -217,7 +216,10 @@ function initDemo() {
 	// post processor
 	post = new PostProcess()
 
+	audioElement.play()
 	// start rendering
+  var progress = document.getElementById("progress");
+  progress.parentNode.removeChild(progress);
 	requestAnimFrame(render)
 }
 
